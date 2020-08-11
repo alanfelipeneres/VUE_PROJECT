@@ -1,4 +1,4 @@
-# projectschool
+# projectschool - For Udemy Curse
 
 ## Project setup
 ```
