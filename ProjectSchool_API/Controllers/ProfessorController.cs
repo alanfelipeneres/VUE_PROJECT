@@ -1,4 +1,8 @@
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ProjectSchool_API.Data;
+using ProjectSchool_API.Models;
 
 namespace ProjectSchool_API.Controllers
 {
@@ -6,39 +10,108 @@ namespace ProjectSchool_API.Controllers
     [ApiController]
     public class ProfessorController : Controller
     {
-        public ProfessorController()
+        public readonly IRepository _repo;
+        public ProfessorController(IRepository repo)
         {
-            
+            _repo = repo;
         }
 
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
-            return Ok("");
+            try
+            {
+                var result = await _repo.GetAllProfessoresAsync(true);
+                return Ok(result);
+            }
+            catch (System.Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Bando de dados falhou");
+            }
         }
 
         [HttpGet("{ProfessorId}")]
-        public IActionResult Get(int ProfessorId)
+        public async Task<IActionResult> GetByProfessorId(int ProfessorId)
         {
-            return Ok("");
+            try
+            {
+                var result = await _repo.GetProfessorAsyncById(ProfessorId, true);
+                return Ok(result);
+            }
+            catch (System.Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Bando de dados falhou");
+            }
         }
 
         [HttpPost]
-        public IActionResult Post()
+        public async Task<IActionResult> Post(Professor model)
         {
-            return Ok("");
+            try
+            {
+                _repo.Add(model);
+
+                if (await _repo.SaveChangesAsync())
+                {
+                    //Created é utilizado para mostrar para interface da API o registro que foi incluido
+                    return Created($"/api/professor/{model.Id}", model);
+                }
+            }
+            catch (System.Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Bando de dados falhou");
+            }
+
+            return BadRequest();
         }
 
         [HttpPut("{ProfessorId}")]
-        public IActionResult Put(int ProfessorId)
+        public async Task<IActionResult> Put(int ProfessorId, Professor model)
         {
-            return Ok("");
+            try
+            {
+                var professor = await _repo.GetProfessorAsyncById(ProfessorId, false);
+                if(professor == null) return NotFound();
+
+                _repo.Update(model);
+
+                if (await _repo.SaveChangesAsync())
+                {
+                    professor = await _repo.GetProfessorAsyncById(ProfessorId, true);
+                    //Created é utilizado para mostrar para interface da API o registro que foi incluido
+                    return Created($"/api/professor/{model.Id}", professor);
+                }
+            }
+            catch (System.Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Bando de dados falhou");
+            }
+
+            return BadRequest();
         }
 
         [HttpDelete("{ProfessorId}")]
-        public IActionResult Delete(int ProfessorId)
+        public async Task<IActionResult> Delete(int ProfessorId)
         {
-            return Ok("");
+            try
+            {
+                var professor = await _repo.GetProfessorAsyncById(ProfessorId, false);
+                if(professor == null) return NotFound();
+
+                _repo.Delete(professor);
+
+                if (await _repo.SaveChangesAsync())
+                {
+                    return Ok();
+                }
+                
+            }
+            catch (System.Exception)
+            {
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "Bando de dados falhou");
+            }
+
+            return BadRequest();
         }
     }
 }

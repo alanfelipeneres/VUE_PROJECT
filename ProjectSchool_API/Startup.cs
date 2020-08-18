@@ -33,6 +33,16 @@ namespace ProjectSchool_API
             );
 
             services.AddControllers();
+
+            //Foi necessário instalar o Microsoft.AspNetCore.Mvc.NewtonsoftJson para corrigir o problema de loop infinito
+            //A entidade Aluno tinha um Professor, que tinha um Aluno, criando o loop infinito
+            services.AddControllersWithViews().AddNewtonsoftJson(options =>
+                options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore
+            );
+
+
+            //Passando o IRepository que está sendo exigido como parâmetro nos construtores das controllers
+            services.AddScoped<IRepository, Repository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
